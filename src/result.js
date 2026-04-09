@@ -1,4 +1,5 @@
 import { drawRadar } from './chart.js'
+import { generateShareImage } from './share.js'
 
 const LEVEL_LABEL = { L: '低', M: '中', H: '高' }
 const LEVEL_CLASS = { L: 'level-low', M: 'level-mid', H: 'level-high' }
@@ -80,4 +81,20 @@ export function renderResult(result, userLevels, dimOrder, dimDefs, config) {
   // 免责声明
   document.getElementById('disclaimer').textContent =
     mode === 'normal' ? config.display.funNote : config.display.funNoteSpecial
+
+  // 下载分享图
+  const btnDownload = document.getElementById('btn-download')
+  btnDownload.onclick = () => {
+    generateShareImage(primary, userLevels, dimOrder, dimDefs, mode)
+  }
+
+  // 复制 AI Agent 命令
+  const btnAgent = document.getElementById('btn-agent')
+  btnAgent.onclick = () => {
+    const cmd = `git clone https://github.com/pingfanfan/SBTI.git && cd SBTI && npm install && npm run dev`
+    navigator.clipboard.writeText(cmd).then(() => {
+      btnAgent.textContent = '已复制!'
+      setTimeout(() => { btnAgent.textContent = '复制一键部署命令' }, 2000)
+    })
+  }
 }
