@@ -25,29 +25,8 @@
   "display": {
     "title": "SBTI-baoyan 保研人格测试",
     "subtitle": "保研人专属的SBTI。",
-    "author": "B站UP主@蛆肉儿串儿 原创；小红书@保研手册 二开",
+    "author": "B站UP主@蛆肉儿串儿 原创；小红书@BYTI 二开",
     "funNote": "本测试仅供娱乐，别让它影响你的保研决策。",
     "funNoteSpecial": "本测试仅供娱乐。隐藏人格等完全不包含任何职业规划建议，切勿当真"
-  },
-  "specialGate": {
-    "entryQuestionId": "gatekeeper_q1",
-    "followupQuestionId": "gatekeeper_q2",
-    "entryInsertMode": "random",
-    "routes": {
-      "1": {
-        "code": "WAIT",
-        "askFollowup": true,
-        "followupMinValue": 3
-      },
-      "2": {
-        "code": "EXAM",
-        "askFollowup": false
-      },
-      "3": {
-        "code": "WORK",
-        "askFollowup": false
-      }
-    },
-    "fallbackCode": "NULL"
   }
 }

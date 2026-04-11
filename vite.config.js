@@ -4,6 +4,6 @@ export default defineConfig({
   base: '/SBTI/',
   build: {
     outDir: 'dist',
-    base: '/SBTI/',
+    
   },
 })

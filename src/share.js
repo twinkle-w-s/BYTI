@@ -1,14 +1,12 @@
-/**
- * 生成分享图片 — 纯 Canvas 绘制，无外部依赖
- */
+import { aggregateModelLevels } from './chart.js'
 
 const LEVEL_NUM = { L: 1, M: 2, H: 3 }
 const LEVEL_LABEL = { L: '低', M: '中', H: '高' }
 
 /**
- * 生成分享卡片并下载
+ * 生成分享图片 — 纯 Canvas 绘制，无外部依赖
  */
-export async function generateShareImage(primary, userLevels, dimOrder, dimDefs, mode) {
+export async function generateShareImage(primary, userLevels, dimensions, mode) {
   const dpr = 2
   const W = 720
   const H = 1280
@@ -18,6 +16,10 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
   const ctx = canvas.getContext('2d')
   ctx.scale(dpr, dpr)
 
+  const { order: dimOrder, definitions: dimDefs, models } = dimensions
+  const modelLevels = aggregateModelLevels(userLevels, dimensions)
+  const modelOrder = Object.keys(models)
+
   drawBackground(ctx, W, H)
 
   const cardX = 32
@@ -26,11 +28,14 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
   const cardH = H - 64
 
   ctx.save()
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.48)'
-  ctx.shadowBlur = 36
-  ctx.shadowOffsetY = 20
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.42)'
+  ctx.shadowBlur = 38
+  ctx.shadowOffsetY = 18
   roundRect(ctx, cardX, cardY, cardW, cardH, 22)
-  ctx.fillStyle = 'rgba(19, 23, 24, 0.94)'
+  const cardGradient = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH)
+  cardGradient.addColorStop(0, 'rgba(32, 35, 41, 0.96)')
+  cardGradient.addColorStop(1, 'rgba(25, 27, 32, 0.96)')
+  ctx.fillStyle = cardGradient
   ctx.fill()
   ctx.restore()
 
@@ -38,46 +43,42 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
   roundRect(ctx, cardX, cardY, cardW, cardH, 22)
   ctx.clip()
   const glow = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH)
-  glow.addColorStop(0, 'rgba(156, 255, 87, 0.08)')
-  glow.addColorStop(0.45, 'rgba(0, 0, 0, 0)')
-  glow.addColorStop(1, 'rgba(255, 93, 93, 0.06)')
+  glow.addColorStop(0, 'rgba(98, 241, 255, 0.08)')
+  glow.addColorStop(0.3, 'rgba(98, 241, 255, 0)')
+  glow.addColorStop(1, 'rgba(239, 79, 255, 0.06)')
   ctx.fillStyle = glow
   ctx.fillRect(cardX, cardY, cardW, cardH)
   ctx.restore()
 
-  ctx.strokeStyle = 'rgba(163, 255, 208, 0.2)'
+  ctx.strokeStyle = 'rgba(98, 241, 255, 0.16)'
   ctx.lineWidth = 1
   roundRect(ctx, cardX, cardY, cardW, cardH, 22)
   ctx.stroke()
 
-  ctx.save()
-  ctx.beginPath()
-  ctx.arc(cardX + 18, cardY + 18, 5, 0, Math.PI * 2)
-  ctx.fillStyle = '#9cff57'
-  ctx.shadowColor = 'rgba(156, 255, 87, 0.6)'
-  ctx.shadowBlur = 18
-  ctx.fill()
-  ctx.restore()
+  ctx.fillStyle = '#62f1ff'
+  ctx.fillRect(cardX + 26, cardY + 18, 130, 2)
+  ctx.fillStyle = '#ef4fff'
+  ctx.fillRect(cardX + 158, cardY + 18, 26, 2)
 
-  let y = cardY + 54
+  let y = cardY + 58
 
   ctx.textAlign = 'center'
   ctx.font = '400 20px Consolas, "Courier New", monospace'
-  ctx.fillStyle = '#ff9a3c'
-  const kickerText = mode === 'special' ? '[ hidden profile activated ]' : mode === 'fallback' ? '[ system force fallback ]' : '[ profile scan complete ]'
+  ctx.fillStyle = '#62f1ff'
+  const kickerText = mode === 'special' ? 'HIDDEN DIAGNOSTIC ACTIVE' : mode === 'fallback' ? 'SYSTEM ABNORMAL ARCHIVE' : 'MENTAL DIAGNOSTIC REPORT'
   ctx.fillText(kickerText, W / 2, y)
   y += 54
 
   ctx.font = '700 74px Bahnschrift, "DIN Alternate", "Arial Narrow", sans-serif'
-  ctx.fillStyle = '#9cff57'
-  ctx.shadowColor = 'rgba(156, 255, 87, 0.16)'
-  ctx.shadowBlur = 18
+  ctx.fillStyle = '#f2f5f7'
+  ctx.shadowColor = 'rgba(98, 241, 255, 0.14)'
+  ctx.shadowBlur = 16
   ctx.fillText(primary.code, W / 2, y)
   ctx.shadowColor = 'transparent'
   y += 42
 
-  ctx.font = '600 30px "Microsoft YaHei", "PingFang SC", sans-serif'
-  ctx.fillStyle = '#e8eadf'
+  ctx.font = '700 30px "Microsoft YaHei", "PingFang SC", sans-serif'
+  ctx.fillStyle = '#ef4fff'
   ctx.fillText(primary.cn, W / 2, y)
   y += 38
 
@@ -85,16 +86,16 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
   ctx.font = '600 18px "Microsoft YaHei", "PingFang SC", sans-serif'
   const badgeW = ctx.measureText(badgeText).width + 38
   roundRect(ctx, (W - badgeW) / 2, y - 16, badgeW, 34, 17)
-  ctx.fillStyle = 'rgba(156, 255, 87, 0.1)'
+  ctx.fillStyle = 'rgba(98, 241, 255, 0.1)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(156, 255, 87, 0.16)'
+  ctx.strokeStyle = 'rgba(98, 241, 255, 0.18)'
   ctx.stroke()
-  ctx.fillStyle = '#9cff57'
+  ctx.fillStyle = '#62f1ff'
   ctx.fillText(badgeText, W / 2, y + 5)
   y += 44
 
   ctx.font = 'italic 600 22px "Microsoft YaHei", "PingFang SC", sans-serif'
-  ctx.fillStyle = '#e8eadf'
+  ctx.fillStyle = '#f2f5f7'
   const introLines = wrapText(ctx, primary.intro || '', cardW - 80)
   for (const line of introLines) {
     ctx.fillText(line, W / 2, y)
@@ -103,15 +104,49 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
   y += 16
 
   const radarCx = W / 2
-  const radarCy = y + 150
-  const radarR = 130
-  drawShareRadar(ctx, radarCx, radarCy, radarR, userLevels, dimOrder, dimDefs)
-  y = radarCy + radarR + 42
+  const radarCy = y + 138
+  const radarR = 124
+  drawShareRadar(ctx, radarCx, radarCy, radarR, modelLevels, modelOrder, models)
+  y = radarCy + radarR + 36
+
+  ctx.textAlign = 'left'
+  const boxX = cardX + 42
+  const boxW = cardW - 84
+  const boxH = 118
+  roundRect(ctx, boxX, y, boxW, boxH, 14)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.03)'
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(98, 241, 255, 0.12)'
+  ctx.stroke()
+
+  ctx.font = '700 15px Bahnschrift, "DIN Alternate", sans-serif'
+  ctx.fillStyle = '#f2f5f7'
+  ctx.fillText('五大模块剖面', boxX + 18, y + 24)
+
+  let rowY = y + 50
+  for (const modelKey of modelOrder) {
+    const model = models[modelKey]
+    const level = modelLevels[modelKey]
+    ctx.font = '600 14px "Microsoft YaHei", "PingFang SC", sans-serif'
+    ctx.fillStyle = '#9ba6b2'
+    ctx.fillText(model.cn, boxX + 18, rowY)
+
+    ctx.textAlign = 'right'
+    ctx.font = '700 13px Consolas, "Courier New", monospace'
+    ctx.fillStyle = level === 'H' ? '#ef4fff' : level === 'M' ? '#62f1ff' : '#ffe85a'
+    ctx.fillText(LEVEL_LABEL[level], boxX + boxW - 18, rowY)
+    ctx.textAlign = 'left'
+
+    rowY += 18
+  }
+
+  y += boxH + 26
 
   ctx.textAlign = 'left'
   const barX = cardX + 48
   const barMaxW = cardW - 96
-  const dimNameW = 110
+  const dimNameW = 134
+  const valuePad = 56
 
   for (const dim of dimOrder) {
     const level = userLevels[dim] || 'M'
@@ -121,12 +156,13 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
 
     const name = def.name.replace(/^[A-Za-z0-9]+\s*/, '')
 
-    ctx.font = '600 16px "Microsoft YaHei", "PingFang SC", sans-serif'
-    ctx.fillStyle = '#e8eadf'
-    ctx.fillText(name, barX, y)
+    ctx.font = '600 14px "Microsoft YaHei", "PingFang SC", sans-serif'
+    ctx.fillStyle = '#f2f5f7'
+    const safeName = fitText(ctx, name, dimNameW - 8)
+    ctx.fillText(safeName, barX, y)
 
     const progX = barX + dimNameW
-    const progW = barMaxW - dimNameW - 50
+    const progW = barMaxW - dimNameW - valuePad
     const progH = 12
     roundRect(ctx, progX, y - 10, progW, progH, 6)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.06)'
@@ -134,24 +170,22 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
 
     const fillW = (val / 3) * progW
     roundRect(ctx, progX, y - 10, fillW, progH, 6)
-    ctx.fillStyle = val === 3 ? '#9cff57' : val === 2 ? '#c6d0be' : '#ff9a3c'
+    ctx.fillStyle = val === 3 ? '#ef4fff' : val === 2 ? '#62f1ff' : '#ffe85a'
     ctx.fill()
 
     ctx.textAlign = 'right'
     ctx.font = '700 13px Consolas, "Courier New", monospace'
-    ctx.fillStyle = val === 3 ? '#9cff57' : val === 2 ? '#c6d0be' : '#ff9a3c'
+    ctx.fillStyle = val === 3 ? '#ef4fff' : val === 2 ? '#62f1ff' : '#ffe85a'
     ctx.fillText(LEVEL_LABEL[level], barX + barMaxW, y)
     ctx.textAlign = 'left'
 
     y += 26
   }
 
-  y += 16
-
   ctx.textAlign = 'center'
   ctx.font = '400 16px Consolas, "Courier New", monospace'
-  ctx.fillStyle = '#8e9686'
-  ctx.fillText('BYTI // mental state archive // for fun only', W / 2, H - cardY - 24)
+  ctx.fillStyle = '#6e7783'
+  ctx.fillText('BYTI // cyber archive // for fun only', W / 2, H - cardY - 24)
 
   const link = document.createElement('a')
   link.download = `BYTI-${primary.code}.png`
@@ -160,67 +194,62 @@ export async function generateShareImage(primary, userLevels, dimOrder, dimDefs,
 }
 
 function drawBackground(ctx, W, H) {
-  ctx.fillStyle = '#0d0f10'
+  ctx.fillStyle = '#111214'
   ctx.fillRect(0, 0, W, H)
 
-  const topGlow = ctx.createRadialGradient(W / 2, 120, 0, W / 2, 120, 280)
-  topGlow.addColorStop(0, 'rgba(156, 255, 87, 0.12)')
-  topGlow.addColorStop(1, 'rgba(156, 255, 87, 0)')
-  ctx.fillStyle = topGlow
+  const glowTop = ctx.createRadialGradient(W / 2, 110, 0, W / 2, 110, 300)
+  glowTop.addColorStop(0, 'rgba(98, 241, 255, 0.12)')
+  glowTop.addColorStop(1, 'rgba(98, 241, 255, 0)')
+  ctx.fillStyle = glowTop
   ctx.fillRect(0, 0, W, H)
 
-  const sideGlow = ctx.createRadialGradient(W * 0.86, H * 0.18, 0, W * 0.86, H * 0.18, 220)
-  sideGlow.addColorStop(0, 'rgba(255, 93, 93, 0.1)')
-  sideGlow.addColorStop(1, 'rgba(255, 93, 93, 0)')
-  ctx.fillStyle = sideGlow
+  const glowSide = ctx.createRadialGradient(W * 0.86, H * 0.22, 0, W * 0.86, H * 0.22, 220)
+  glowSide.addColorStop(0, 'rgba(239, 79, 255, 0.1)')
+  glowSide.addColorStop(1, 'rgba(239, 79, 255, 0)')
+  ctx.fillStyle = glowSide
   ctx.fillRect(0, 0, W, H)
 
-  ctx.strokeStyle = 'rgba(138, 255, 196, 0.05)'
+  ctx.strokeStyle = 'rgba(98, 241, 255, 0.04)'
   ctx.lineWidth = 1
-  for (let x = 0; x <= W; x += 26) {
+  for (let x = 0; x <= W; x += 28) {
     ctx.beginPath()
     ctx.moveTo(x, 0)
     ctx.lineTo(x, H)
     ctx.stroke()
   }
-  for (let y = 0; y <= H; y += 26) {
+  for (let y = 0; y <= H; y += 28) {
     ctx.beginPath()
     ctx.moveTo(0, y)
     ctx.lineTo(W, y)
     ctx.stroke()
   }
 
-  for (let y = 0; y <= H; y += 4) {
-    ctx.fillStyle = y % 8 === 0 ? 'rgba(255,255,255,0.012)' : 'rgba(255,255,255,0.006)'
+  for (let y = 0; y <= H; y += 5) {
+    ctx.fillStyle = 'rgba(255,255,255,0.008)'
     ctx.fillRect(0, y, W, 1)
   }
-
-  ctx.save()
-  ctx.globalAlpha = 0.18
-  ctx.filter = 'blur(22px)'
-  ctx.fillStyle = 'rgba(255,255,255,0.08)'
-  ctx.beginPath()
-  ctx.ellipse(W / 2, 240, 130, 70, 0, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.restore()
 }
 
-/**
- * 在分享图上绘制雷达图
- */
-function drawShareRadar(ctx, cx, cy, maxR, userLevels, dimOrder, dimDefs) {
-  const n = dimOrder.length
+function drawShareRadar(ctx, cx, cy, maxR, modelLevels, modelOrder, models) {
+  const n = modelOrder.length
   const step = (Math.PI * 2) / n
   const start = -Math.PI / 2
 
   for (let lv = 3; lv >= 1; lv--) {
     const r = (lv / 3) * maxR
     ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fillStyle = lv === 3 ? 'rgba(156,255,87,0.06)' : lv === 2 ? 'rgba(156,255,87,0.04)' : 'rgba(156,255,87,0.02)'
+    for (let i = 0; i < n; i++) {
+      const angle = start + i * step
+      const x = cx + Math.cos(angle) * r
+      const y = cy + Math.sin(angle) * r
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.closePath()
+    ctx.fillStyle = lv === 3 ? 'rgba(98,241,255,0.05)' : lv === 2 ? 'rgba(98,241,255,0.035)' : 'rgba(98,241,255,0.02)'
     ctx.fill()
-    ctx.strokeStyle = 'rgba(156,255,87,0.12)'
-    ctx.lineWidth = 0.5
+    ctx.strokeStyle = 'rgba(98,241,255,0.1)'
+    ctx.lineWidth = 0.6
     ctx.stroke()
   }
 
@@ -235,19 +264,17 @@ function drawShareRadar(ctx, cx, cy, maxR, userLevels, dimOrder, dimDefs) {
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.lineTo(x, y)
-    ctx.strokeStyle = 'rgba(156,255,87,0.1)'
+    ctx.strokeStyle = 'rgba(98,241,255,0.08)'
     ctx.lineWidth = 0.5
     ctx.stroke()
 
-    const lr = maxR + 24
+    const lr = maxR + 28
     const lx = cx + Math.cos(angle) * lr
     const ly = cy + Math.sin(angle) * lr
-    const label = (dimDefs[dimOrder[i]]?.name || dimOrder[i]).replace(/^[A-Za-z0-9]+\s*/, '')
-    ctx.fillStyle = '#8e9686'
-    ctx.fillText(label, lx, ly)
+    drawRadarLabel(ctx, models[modelOrder[i]].cn, lx, ly, angle)
   }
 
-  const values = dimOrder.map((d) => LEVEL_NUM[userLevels[d]] || 2)
+  const values = modelOrder.map((key) => LEVEL_NUM[modelLevels[key]] || 2)
   ctx.beginPath()
   for (let i = 0; i < n; i++) {
     const angle = start + i * step
@@ -258,9 +285,9 @@ function drawShareRadar(ctx, cx, cy, maxR, userLevels, dimOrder, dimDefs) {
     else ctx.lineTo(x, y)
   }
   ctx.closePath()
-  ctx.fillStyle = 'rgba(156,255,87,0.16)'
+  ctx.fillStyle = 'rgba(98,241,255,0.14)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(156,255,87,0.6)'
+  ctx.strokeStyle = 'rgba(98,241,255,0.6)'
   ctx.lineWidth = 2
   ctx.stroke()
 
@@ -270,15 +297,12 @@ function drawShareRadar(ctx, cx, cy, maxR, userLevels, dimOrder, dimDefs) {
     const x = cx + Math.cos(angle) * r
     const y = cy + Math.sin(angle) * r
     ctx.beginPath()
-    ctx.arc(x, y, 3, 0, Math.PI * 2)
-    ctx.fillStyle = '#9cff57'
+    ctx.arc(x, y, 4, 0, Math.PI * 2)
+    ctx.fillStyle = i === 2 ? '#ef4fff' : '#62f1ff'
     ctx.fill()
   }
 }
 
-/**
- * 圆角矩形
- */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
@@ -293,9 +317,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-/**
- * 文字自动换行
- */
 function wrapText(ctx, text, maxWidth) {
   if (!text) return []
   const lines = []
@@ -311,4 +332,40 @@ function wrapText(ctx, text, maxWidth) {
   }
   if (line) lines.push(line)
   return lines
+}
+
+function fitText(ctx, text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text
+  let fitted = text
+  while (fitted.length > 1 && ctx.measureText(fitted + '…').width > maxWidth) {
+    fitted = fitted.slice(0, -1)
+  }
+  return fitted + '…'
+}
+
+function drawRadarLabel(ctx, text, x, y, angle) {
+  const isTop = Math.sin(angle) < -0.7
+  const isBottom = Math.sin(angle) > 0.7
+  const isRight = Math.cos(angle) > 0.45
+  const isLeft = Math.cos(angle) < -0.45
+
+  if (isTop) {
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
+  } else if (isBottom) {
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+  } else if (isRight) {
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+  } else if (isLeft) {
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'middle'
+  } else {
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+  }
+
+  ctx.fillStyle = '#9ba6b2'
+  ctx.fillText(text, x, y)
 }

@@ -13,8 +13,8 @@
     <!-- 首页 -->
     <section id="page-intro" class="page active">
       <div class="card intro-card">
-        <h1 class="intro-title">BYTI保研人格测试来了<br/>娱乐性保研人精神状态测试</h1>
-        <button id="btn-start" class="btn btn-primary">开始精神状态测试</button>
+        <h1 class="intro-title"><span class="intro-title-main">BYTI</span><br/><span class="accent-magenta intro-title-sub">保研-人格测试</span></h1>
+        <button id="btn-start" class="btn btn-primary">开始测试</button>
         <p class="intro-credit">开源项目 · 基于 B站UP主@蛆肉儿串儿 原创测试-SBTI · 小红书@保研手册 二开</p>
         <p class="intro-note">本测试仅供娱乐，不含任何指向性建议</p>
       </div>
@@ -37,7 +37,12 @@
     <!-- 结果页 -->
     <section id="page-result" class="page">
       <div class="card result-card" id="result-card">
-        <div class="result-kicker" id="result-kicker">你的主类型</div>
+        <div class="result-terminal-head">
+          <span class="terminal-dot"></span>
+          <span class="terminal-meta">MENTAL DIAGNOSTICS // SESSION ACTIVE</span>
+          <span class="terminal-state">ARCHIVE READY</span>
+        </div>
+        <div class="result-kicker" id="result-kicker">人格诊断报告</div>
         <div class="result-code" id="result-code"></div>
         <div class="result-name" id="result-name"></div>
         <div class="result-badge" id="result-badge"></div>
@@ -49,14 +54,10 @@
           <div class="secondary-info" id="secondary-info"></div>
         </div>
 
-        <h3 class="section-title">十五维度评分</h3>
+        <h3 class="section-title">五大模块剖面</h3>
         <canvas id="radar-chart" width="320" height="320"></canvas>
+        <div class="model-summary" id="model-summary"></div>
         <div class="dimensions-detail" id="dimensions-detail"></div>
-
-        <div class="result-top3">
-          <h3 class="section-title">最佳匹配 TOP 5</h3>
-          <div id="top-list"></div>
-        </div>
 
         <div class="disclaimer" id="disclaimer"></div>
 

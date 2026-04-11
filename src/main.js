@@ -28,14 +28,13 @@ async function init() {
     window.scrollTo(0, 0)
   }
 
-  function onQuizComplete(answers, specialState) {
+  function onQuizComplete(answers) {
     const scores = calcDimensionScores(answers, questions.main)
     const levels = scoresToLevels(scores, config.scoring.levelThresholds)
     const result = determineResult(levels, dimensions.order, types.standard, types.special, {
-      specialResultCode: specialState?.specialResultCode,
       fallbackThreshold: config.scoring.fallbackThreshold,
     })
-    renderResult(result, levels, dimensions.order, dimensions.definitions, config)
+    renderResult(result, levels, dimensions, config)
     showPage('result')
   }
 
