@@ -72,11 +72,11 @@ export function matchType(userLevels, dimOrder, pattern) {
 
 /**
  * 匹配所有类型，排序，应用特殊覆盖
- * @param {Object}  userLevels   { S1: 'H', ... }
- * @param {Array}   dimOrder     维度顺序
+ * @param {Object}  userLevels    { S1: 'H', ... }
+ * @param {Array}   dimOrder      维度顺序
  * @param {Array}   standardTypes 标准类型数组
  * @param {Array}   specialTypes  特殊类型数组
- * @param {Object}  options      { isDrunk: boolean }
+ * @param {Object}  options       { specialResultCode?: string, fallbackThreshold?: number }
  * @returns {{ primary: Object, secondary: Object|null, rankings: Array, mode: string }}
  */
 export function determineResult(userLevels, dimOrder, standardTypes, specialTypes, options = {}) {
@@ -89,23 +89,24 @@ export function determineResult(userLevels, dimOrder, standardTypes, specialType
   rankings.sort((a, b) => a.distance - b.distance || b.exact - a.exact || b.similarity - a.similarity)
 
   const best = rankings[0]
-  const drunk = specialTypes.find((t) => t.code === 'DRUNK')
-  const hhhh = specialTypes.find((t) => t.code === 'HHHH')
+  const fallbackThreshold = options.fallbackThreshold ?? 60
+  const fallbackSpecial = specialTypes.find((t) => t.code === 'NULL')
+  const special = options.specialResultCode
+    ? specialTypes.find((t) => t.code === options.specialResultCode)
+    : null
 
-  // 酒鬼覆盖
-  if (options.isDrunk && drunk) {
+  if (special) {
     return {
-      primary: { ...drunk, similarity: best.similarity, exact: best.exact },
-      secondary: best,
+      primary: { ...special, similarity: best?.similarity ?? 0, exact: best?.exact ?? 0 },
+      secondary: best || null,
       rankings,
-      mode: 'drunk',
+      mode: 'special',
     }
   }
 
-  // 傻乐者兜底
-  if (best.similarity < 60 && hhhh) {
+  if (best && best.similarity < fallbackThreshold && fallbackSpecial) {
     return {
-      primary: { ...hhhh, similarity: best.similarity, exact: best.exact },
+      primary: { ...fallbackSpecial, similarity: best.similarity, exact: best.exact },
       secondary: best,
       rankings,
       mode: 'fallback',

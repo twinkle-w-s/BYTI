@@ -12,7 +12,7 @@ export function renderResult(result, userLevels, dimOrder, dimDefs, config) {
 
   // Kicker
   const kicker = document.getElementById('result-kicker')
-  if (mode === 'drunk') kicker.textContent = '隐藏人格已激活'
+  if (mode === 'special') kicker.textContent = '隐藏人格已激活'
   else if (mode === 'fallback') kicker.textContent = '系统强制兜底'
   else kicker.textContent = '你的主类型'
 
@@ -30,7 +30,7 @@ export function renderResult(result, userLevels, dimOrder, dimDefs, config) {
 
   // 次要匹配
   const secEl = document.getElementById('result-secondary')
-  if (secondary && (mode === 'drunk' || mode === 'fallback')) {
+  if (secondary && (mode === 'special' || mode === 'fallback')) {
     secEl.style.display = ''
     document.getElementById('secondary-info').textContent =
       `${secondary.code}（${secondary.cn}）· 匹配度 ${secondary.similarity}%`

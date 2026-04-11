@@ -4,20 +4,31 @@ import { shuffle, insertAtRandom, insertAfter } from './utils.js'
  * 答题控制器
  */
 export function createQuiz(questions, config, onComplete) {
-  const mainQuestions = shuffle(questions.main)
-  const drinkGateQ1 = questions.special.find((q) => q.id === config.drinkGate.questionId)
-  const drinkGateQ2 = questions.special.find((q) => q.id === 'drink_gate_q2')
+  const specialGateConfig = config.specialGate || {}
+  const gateEntry = questions.special.find((q) => q.id === specialGateConfig.entryQuestionId)
+  const gateFollowup = questions.special.find((q) => q.id === specialGateConfig.followupQuestionId)
 
-  let queue = insertAtRandom(mainQuestions, drinkGateQ1)
+  let queue = buildQueue()
   let current = 0
   let answers = {}
-  let isDrunk = false
+  let specialResultCode = null
 
   const els = {
     fill: document.getElementById('progress-fill'),
     text: document.getElementById('progress-text'),
     qText: document.getElementById('question-text'),
     options: document.getElementById('options'),
+  }
+
+  function buildQueue() {
+    const mainQuestions = shuffle(questions.main)
+    if (!gateEntry) return mainQuestions
+
+    if (specialGateConfig.entryInsertMode === 'random') {
+      return insertAtRandom(mainQuestions, gateEntry)
+    }
+
+    return [gateEntry, ...mainQuestions]
   }
 
   function totalCount() {
@@ -46,22 +57,49 @@ export function createQuiz(questions, config, onComplete) {
     updateProgress()
   }
 
+  function handleSpecialRoute(question, option) {
+    if (question.id !== specialGateConfig.entryQuestionId) return
+
+    const route = specialGateConfig.routes?.[String(option.value)]
+    if (!route) {
+      specialResultCode = specialGateConfig.fallbackCode || null
+      return
+    }
+
+    if (route.askFollowup && gateFollowup) {
+      queue = insertAfter(queue, question.id, gateFollowup)
+      return
+    }
+
+    specialResultCode = route.code || specialGateConfig.fallbackCode || null
+  }
+
+  function handleSpecialFollowup(question, option) {
+    if (question.id !== specialGateConfig.followupQuestionId) return
+
+    const entryAnswer = answers[specialGateConfig.entryQuestionId]
+    const route = specialGateConfig.routes?.[String(entryAnswer)]
+    if (!route) {
+      specialResultCode = specialGateConfig.fallbackCode || null
+      return
+    }
+
+    if (route.followupMinValue != null && option.value >= route.followupMinValue) {
+      specialResultCode = route.code || specialGateConfig.fallbackCode || null
+    } else {
+      specialResultCode = specialGateConfig.fallbackCode || null
+    }
+  }
+
   function selectOption(question, option) {
     answers[question.id] = option.value
 
-    // 酒鬼门：如果选了"饮酒"，插入追问
-    if (question.id === config.drinkGate.questionId && option.value === config.drinkGate.triggerValue) {
-      queue = insertAfter(queue, question.id, drinkGateQ2)
-    }
-
-    // 酒鬼检测
-    if (question.id === 'drink_gate_q2' && option.value === config.drinkGate.drunkTriggerValue) {
-      isDrunk = true
-    }
+    handleSpecialRoute(question, option)
+    handleSpecialFollowup(question, option)
 
     current++
     if (current >= totalCount()) {
-      onComplete(answers, isDrunk)
+      onComplete(answers, { specialResultCode })
     } else {
       renderQuestion()
     }
@@ -70,8 +108,8 @@ export function createQuiz(questions, config, onComplete) {
   function start() {
     current = 0
     answers = {}
-    isDrunk = false
-    queue = insertAtRandom(shuffle(questions.main), drinkGateQ1)
+    specialResultCode = null
+    queue = buildQueue()
     renderQuestion()
   }
 

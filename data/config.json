@@ -23,15 +23,31 @@
     "fallbackThreshold": 60
   },
   "display": {
-    "title": "SBTI 人格测试",
-    "subtitle": "MBTI已经过时，SBTI来了。",
-    "author": "B站UP主@蛆肉儿串儿 原创",
-    "funNote": "本测试仅供娱乐，别拿它当诊断、面试、相亲、分手、招魂、算命或人生判决书。",
-    "funNoteSpecial": "本测试仅供娱乐。隐藏人格和傻乐兜底都属于作者故意埋的损招，请勿把它当成医学、心理学、相学、命理学或灵异学依据。"
+    "title": "SBTI-baoyan 保研人格测试",
+    "subtitle": "保研人专属的SBTI。",
+    "author": "B站UP主@蛆肉儿串儿 原创；小红书@保研手册 二开",
+    "funNote": "本测试仅供娱乐，别让它影响你的保研决策。",
+    "funNoteSpecial": "本测试仅供娱乐。隐藏人格等完全不包含任何职业规划建议，切勿当真"
   },
-  "drinkGate": {
-    "questionId": "drink_gate_q1",
-    "triggerValue": 3,
-    "drunkTriggerValue": 2
+  "specialGate": {
+    "entryQuestionId": "gatekeeper_q1",
+    "followupQuestionId": "gatekeeper_q2",
+    "entryInsertMode": "random",
+    "routes": {
+      "1": {
+        "code": "WAIT",
+        "askFollowup": true,
+        "followupMinValue": 3
+      },
+      "2": {
+        "code": "EXAM",
+        "askFollowup": false
+      },
+      "3": {
+        "code": "WORK",
+        "askFollowup": false
+      }
+    },
+    "fallbackCode": "NULL"
   }
 }
